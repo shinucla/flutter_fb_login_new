@@ -39,6 +39,9 @@ target 'Runner' do
   system('mkdir -p .symlinks/plugins')
 
   # Flutter Pods
+  pod 'FBSDKCoreKit', '~> 4.38.1'
+  pod 'FBSDKLoginKit', '~> 4.38.1'
+  
   generated_xcode_build_settings = parse_KV_file('./Flutter/Generated.xcconfig')
   if generated_xcode_build_settings.empty?
     puts "Generated.xcconfig must exist. If you're running pod install manually, make sure flutter packages get is executed first."
