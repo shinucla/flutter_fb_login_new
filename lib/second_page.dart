@@ -91,13 +91,10 @@ class SecondPageState extends State<SecondPage> {
 
       } else {
 	/* decode user from jwt */
-	const base64Codec = const Base64Codec();
-	const latin1 = const Latin1Codec();
 	var jwt = body['data']['jwt'];
-	var base64Url = jwt.split('.')[1];
-	var base64 = base64Url.replaceAll('-', '+').replaceAll('_', '/');
-	base64 = base64.padRight(base64.length + (4 - (base64.length % 4)), '=');
-	var decode = latin1.fuse(base64Codec).decode(base64);
+	var base64 = jwt.split('.')[1].replaceAll('-', '+').replaceAll('_', '/');
+	base64 = base64.padRight(base64.length + (4 - base64.length % 4) % 4, '='); // pading '=' so the len is multiple of 4
+	var decode = Utf8Codec().fuse(Base64Codec()).decode(base64);
 	var user = jsonDecode(decode);
 	
 	storeKeyValue(Config.FSS_KEY_JWT, jwt);
@@ -118,6 +115,11 @@ class SecondPageState extends State<SecondPage> {
     setState(() {
       this.jwt = null;
       this.isLoggedIn = false;
+      this.user = {};
+      () async {
+	await this.storage.delete(key: Config.FSS_KEY_USER);
+	await this.storage.delete(key: Config.FSS_KEY_JWT);
+      }();
     });
   }
 
