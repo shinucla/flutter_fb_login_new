@@ -32,7 +32,7 @@ class SecondPageState extends State<SecondPage> {
 	body: Container(
 	  child: Center(child: isAuthenticated
 			? (isLoggedIn
-			   ? Text('logged in ' + this.jwt)
+			   ? RaisedButton(child: Text('Login Out, ${this.jwt}'), onPressed: () => initLogout())
 			   : RaisedButton(child: Text('Login in'), onPressed: () => initLogin()))
 			: RaisedButton(child: Text('Auth with FB'), onPressed: () => initFBAuth()))
 
@@ -82,11 +82,11 @@ class SecondPageState extends State<SecondPage> {
     if (200 == res.statusCode) {
       var body = jsonDecode(res.body);
 
-      if (null != body['result']['err']) {
+      if (null != body['error']) {
 	print('NOT Logged in');
 
       } else {
-	var jwt = body['result']['jwt'];
+	var jwt = body['data']['jwt'];
 	storeKeyValue(Config.FSS_KEY_JWT, jwt);
 	setState(() {
 	  this.jwt = jwt;
@@ -97,6 +97,13 @@ class SecondPageState extends State<SecondPage> {
     } else {
       print('NOT Logged in');
     }
+  }
+
+  void initLogout() async {
+    setState(() {
+      this.jwt = null;
+      this.isLoggedIn = false;
+    });
   }
 
   void onAuthStatusChanged(res, bool isAuthenticated) {
