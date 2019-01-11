@@ -18,6 +18,7 @@ class SecondPageState extends State<SecondPage> {
 
   String accessToken = '';
   String jwt = "";
+  Map<String, dynamic> user = {};
 
   @override void initState() {
     super.initState();
@@ -32,7 +33,8 @@ class SecondPageState extends State<SecondPage> {
 	body: Container(
 	  child: Center(child: isAuthenticated
 			? (isLoggedIn
-			   ? RaisedButton(child: Text('Login Out, ${this.jwt}'), onPressed: () => initLogout())
+			   ? RaisedButton(child: Text('Login Out, ${this.user["first_name"]} ${this.user["last_name"]}!'),
+					  onPressed: () => initLogout())
 			   : RaisedButton(child: Text('Login in'), onPressed: () => initLogin()))
 			: RaisedButton(child: Text('Auth with FB'), onPressed: () => initFBAuth()))
 
@@ -44,12 +46,14 @@ class SecondPageState extends State<SecondPage> {
   void initStoredValuesAsyc() async {
     var token = await this.storage.read(key: Config.FSS_KEY_FB_TOKEN);
     var jwt = await this.storage.read(key: Config.FSS_KEY_JWT);
+    var user = await this.storage.read(key: Config.FSS_KEY_USER);
 
     setState(() {
       this.accessToken = token;
       this.jwt = jwt;
       this.isAuthenticated = null == token ? false : true;
       this.isLoggedIn = null == jwt ? false : true;
+      this.user = null == user ? {} : jsonDecode(user);
     });
   }
 
@@ -86,11 +90,22 @@ class SecondPageState extends State<SecondPage> {
 	print('NOT Logged in');
 
       } else {
+	/* decode user from jwt */
+	const base64Codec = const Base64Codec();
+	const latin1 = const Latin1Codec();
 	var jwt = body['data']['jwt'];
+	var base64Url = jwt.split('.')[1];
+	var base64 = base64Url.replaceAll('-', '+').replaceAll('_', '/');
+	base64 = base64.padRight(base64.length + (4 - (base64.length % 4)), '=');
+	var decode = latin1.fuse(base64Codec).decode(base64);
+	var user = jsonDecode(decode);
+	
 	storeKeyValue(Config.FSS_KEY_JWT, jwt);
+	storeKeyValue(Config.FSS_KEY_USER, jsonEncode(user));
 	setState(() {
 	  this.jwt = jwt;
 	  this.isLoggedIn = null == jwt ? false : true;
+	  this.user = user;
 	});
       }
 
